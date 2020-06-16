@@ -1,0 +1,7 @@
+django
+gunicorn
+django-heroku
+discord.py
+requests
+psycopg2-binary
+dj-database-url
