@@ -39,8 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "hello",
 ]
+
+# INSTALLED_APPS previously had "hello" in it
+# Which I assume means we need to add each new
+# module folder when we make our site
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -52,7 +55,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "gettingstarted.urls"
+ROOT_URLCONF = "dashboard.urls"
 
 TEMPLATES = [
     {
@@ -70,7 +73,7 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "gettingstarted.wsgi.application"
+WSGI_APPLICATION = "dashboard.wsgi.application"
 
 
 # Database
