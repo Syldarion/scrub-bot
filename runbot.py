@@ -1,5 +1,5 @@
 import os
-from .discordclient import DiscordClient
+from bot.discordclient import DiscordClient
 
 if __name__ == "__main__":
     client = DiscordClient()
