@@ -8,6 +8,7 @@ class Event(object):
         self.event_datetime = None
         self.user_provided_datetime = ""
         self.max_players = 0
+        self.server_id = "0"
 
     def __str__(self):
         return (f"Game: {self.game_name}\n"
@@ -17,4 +18,11 @@ class Event(object):
                 f"ID: {self.event_id}\n"
                 f"Datetime: {self.event_datetime}\n"
                 f"UserDatetime: {self.user_provided_datetime}\n"
-                f"MaxPlayers: {self.max_players}")
+                f"MaxPlayers: {self.max_players}\n"
+                f"ServerID: {self.server_id}")
+
+    def short_text(self):
+        fmt_date = self.event_datetime.strftime("%b %d, %Y - %I:%M%p %Z")
+        return f"\"{self.event_name}\" (ID: {self.event_id}) - " \
+               f"Playing {self.game_name} - {len(self.player_list)} player(s)\n" \
+               f"{fmt_date}"

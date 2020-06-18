@@ -20,15 +20,17 @@ class EventDatabase(object):
     @classmethod
     def add_event(cls, event: Event):
         cur = cls.connection.cursor()
-        sql = ("INSERT INTO events(name, game, hostid, participantids, maxparticipants, datetimeutc, userprovidedtime) "
-               "VALUES(%s, %s, %s, %s, %s, %s, %s) RETURNING id;")
+        sql = ("INSERT INTO events(name, game, hostid, participantids, "
+               "maxparticipants, datetimeutc, userprovidedtime, serverid) "
+               "VALUES(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;")
         data = (event.event_name,
                 event.game_name,
                 event.host_id,
                 event.player_list,
                 event.max_players,
                 event.event_datetime,
-                event.user_provided_datetime,)
+                event.user_provided_datetime,
+                event.server_id,)
         cur.execute(sql, data)
 
         event.event_id = cur.fetchone()[0]
@@ -57,14 +59,16 @@ class EventDatabase(object):
         event.event_datetime = dateparser.parse(str(first_record[5]))
         event.user_provided_datetime = first_record[6]
         event.max_players = first_record[7]
+        event.server_id = first_record[8]
 
         return event
 
     @classmethod
     def update_event(cls, event: Event):
         cur = cls.connection.cursor()
-        sql = ("UPDATE events set (name, game, hostid, participantids, maxparticipants, datetimeutc, userprovidedtime) "
-               "= (%s, %s, %s, %s, %s, %s, %s) where id = %s")
+        sql = ("UPDATE events set (name, game, hostid, participantids, "
+               "maxparticipants, datetimeutc, userprovidedtime, serverid) "
+               "= (%s, %s, %s, %s, %s, %s, %s, %s) where id = %s")
         data = (event.event_name,
                 event.game_name,
                 event.host_id,
@@ -72,6 +76,7 @@ class EventDatabase(object):
                 event.max_players,
                 event.event_datetime,
                 event.user_provided_datetime,
+                event.server_id,
                 event.event_id,)
         cur.execute(sql, data)
 
@@ -86,3 +91,32 @@ class EventDatabase(object):
         cur.execute(sql, data)
         cls.connection.commit();
         cur.close()
+
+    @classmethod
+    def get_active_events(cls, server_id):
+        cur = cls.connection.cursor()
+        sql = ("SELECT * FROM events "
+               "WHERE datetimeutc > now() "
+               "AND serverid = %s")
+        data = (server_id,)
+        cur.execute(sql, data)
+        records = cur.fetchall()
+
+        events = []
+
+        for record in records:
+            event = Event()
+            event.event_id = record[0]
+            event.event_name = record[1]
+            event.player_list = record[2]
+            event.game_name = record[3]
+            event.host_id = record[4]
+            event.event_datetime = dateparser.parse(str(record[5]))
+            event.user_provided_datetime = record[6]
+            event.max_players = record[7]
+            event.server_id = record[8]
+            events.append(event)
+
+        cur.close()
+
+        return events
