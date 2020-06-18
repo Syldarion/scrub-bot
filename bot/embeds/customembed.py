@@ -14,7 +14,7 @@ class CustomEmbed(object):
         self.title = ""
         self.description = ""
         self.color = 0
-        self.timestamp = None
+        self.timestamp = discord.Embed.Empty
         self.footer_text = ""
         self.thumbnail_url = ""
         self.author_text = ""
@@ -22,15 +22,12 @@ class CustomEmbed(object):
         self.image_url = ""
         self.fields = []
 
-    def build_embed(self):
+    async def build_embed(self):
         embed = discord.Embed(title=self.title,
                               type="rich",
                               description=self.description,
                               color=self.color,
                               timestamp=self.timestamp)
-
-        print(type(self.timestamp))
-        print(self.timestamp)
 
         embed.set_footer(text=self.footer_text)
         embed.set_image(url=self.image_url)

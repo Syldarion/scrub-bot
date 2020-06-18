@@ -4,8 +4,13 @@ from database.eventdatabase import EventDatabase
 
 
 class DiscordClient(discord.Client):
+    instance = None
+
     def __init__(self, *args, **kwargs):
         super(DiscordClient, self).__init__(*args, **kwargs)
+
+        # SINGLETONS BOO
+        DiscordClient.instance = self
 
         self.event_db = EventDatabase()
         self.command_interface = CommandInterface()

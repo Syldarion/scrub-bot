@@ -8,3 +8,13 @@ class Event(object):
         self.event_datetime = None
         self.user_provided_datetime = ""
         self.max_players = 0
+
+    def __str__(self):
+        return (f"Game: {self.game_name}\n"
+                f"HostID: {self.host_id}\n"
+                f"Title: {self.event_name}\n"
+                f"Players: {','.join(self.player_list)}\n"
+                f"ID: {self.event_id}\n"
+                f"Datetime: {self.event_datetime}\n"
+                f"UserDatetime: {self.user_provided_datetime}\n"
+                f"MaxPlayers: {self.max_players}")

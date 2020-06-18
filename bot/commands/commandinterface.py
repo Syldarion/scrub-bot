@@ -1,80 +1,88 @@
 import shlex
 import discord
-from .command import Command
+from .command import Command, CommandParseError, CommandArg
 from .commandcontext import CommandContext
+from bot.embeds.commandembed import CommandEmbed, CommandExampleEmbed
+from bot.embeds.commandgroupembed import CommandGroupEmbed
+from bot.embeds.generalhelpembed import GeneralHelpEmbed
 from .eventcommands import event_command_group
-from .gamecommands import game_commands_group
 
 
 class CommandInterface(object):
     def __init__(self):
         self.command_groups = {
             event_command_group.name: event_command_group,
-            game_commands_group.name: game_commands_group
-        }
-        self.standalone_commands = {
-
         }
 
     async def handle_command_message(self, message: discord.Message) -> bool:
         context = CommandContext(message)
         # [1:] to remove the leading character for commands
-        command_parts = shlex.split(message.content[1:])
+        # command_parts = shlex.split(message.content[1:])
+        command_parts = message.content[1:].split()
 
         if not command_parts:
             # There was nothing there
             return
 
-        group = command_parts[0]
-        sub_command = None
-        args = None
-        result = False
+        part_count = len(command_parts)
+        group_name = command_parts[0]
+        command_name = command_parts[1] if part_count > 1 else None
 
-        if group in self.standalone_commands:
-            args = command_parts[1:]
-            result = await self.execute_command(self.standalone_commands[group], context, *args)
-        elif group in self.command_groups:
-            sub_command = None
-            args = None
+        if group_name == "help":
+            embed = await GeneralHelpEmbed(self.command_groups).build_embed()
+            await message.channel.send(embed=embed)
+            return
 
-            if len(command_parts) > 2:
-                sub_command = command_parts[1]
-                args = command_parts[2:]
+        if group_name not in self.command_groups:
+            embed = await GeneralHelpEmbed(self.command_groups).build_embed()
+            await message.channel.send(f"Command group [{group_name}] does not exist.", embed=embed)
+            return
 
-            if not sub_command or sub_command == "help":
-                help_text = self.command_groups[group].help_text
-                await message.channel.send(help_text)
-                return True
+        group = self.command_groups[group_name]
 
-            command = self.command_groups[group].get_command(sub_command)
+        if not command_name or command_name == "-help":
+            embed = await CommandGroupEmbed(group).build_embed()
+            await message.channel.send(embed=embed)
+            return
 
-            if not command:
-                await message.channel.send(self.invalid_command_message(group, sub_command))
-                return False
+        if command_name not in group.commands:
+            embed = await CommandGroupEmbed(group).build_embed()
+            await message.channel.send(self.invalid_sub_command_message(command_name), embed=embed)
+            return
 
-            result = await self.execute_command(command, context, *args)
+        command = group.get_command(command_name)
 
-        return result
+        await self.execute_command(command, context, command_parts[2:])
 
-    async def execute_command(self, command, context, *args):
+    async def execute_command(self, command, context, args):
         result = False
 
         try:
-            result = await command.execute(context, *args)
+            parsed_args = command.parse_args(args)
+
+            print(parsed_args)
+            result = await command.execute(context, parsed_args)
+        except CommandParseError as e:
+            print(e)
+            embed = await CommandEmbed(command).build_embed()
+            await context.channel.send(self.command_exception_message(command, e), embed=embed)
         except Exception as e:
             print(e)
-            print(e.__traceback__)
             await context.channel.send(self.command_exception_message(command, e))
 
         return result
 
-    def invalid_command_message(self, group, command_name):
-        return f"Unrecognized command [{group}.{command_name}]. See $help for available commands"
+    def invalid_sub_command_message(self, command_group):
+        return f"Invalid sub-command for group [{command_group}]"
+
+    def invalid_command_message(self, command, sub_command):
+        if not sub_command:
+            return f"Unrecognized command [{command}]"
+        else:
+            return f"Unrecognized command [{command}.{sub_command}]"
 
     def command_exception_message(self, command, exception):
-        return f"Failed to run command [{command.name}]!\nReason: {str(exception)}"
-
-
-class GeneralHelpCommand(Command):
-    def __init__(self):
-        super(GeneralHelpCommand, self).__init__("help")
+        if command.group:
+            return f"Failed to run command [{command.group.name}.{command.name}]\nReason: \"{str(exception)}\""
+        else:
+            return f"Failed to run command [{command.name}]!\nReason: {str(exception)}"
