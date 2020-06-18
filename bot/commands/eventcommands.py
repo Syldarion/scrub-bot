@@ -71,7 +71,7 @@ class EventCreateCommand(Command):
                            f"Event will be created, but will not have alerts"
                            f"You can update the time with `$event update -t <time>`")
                 await context.channel.send(message)
-            elif parsed_dt < datetime.datetime.now():
+            elif parsed_dt.astimezone(None) < datetime.datetime.now():
                 await context.channel.send(f"Time \"{args.time}\" is in the past, and will not be used.")
             else:
                 new_event.event_datetime = parsed_dt
@@ -158,7 +158,7 @@ class EventEditCommand(Command):
                 message = (f"Could not parse time input \"{args.time}\"\n")
                 await context.channel.send(message)
                 event.event_datetime = None
-            elif parsed_dt < datetime.datetime.now():
+            elif parsed_dt.astimezone(None) < datetime.datetime.now():
                 await context.channel.send(f"Time \"{args.time}\" is in the past, and will not be used.")
             else:
                 event.event_datetime = parsed_dt
