@@ -371,39 +371,6 @@ class EventPlayersCommand(Command):
         await context.channel.send(embed=players_embed)
 
 
-class EventInviteCommand(Command):
-    def __init__(self):
-        super(EventInviteCommand, self).__init__("invite",
-                                                 description_text="Invite the mentioned player to the event",
-                                                 help_title="$event invite [event id] @[user]")
-
-        id_arg = CommandArg(names=["event"],
-                            help="Event ID",
-                            type=int)
-        user_arg = CommandArg(names=["user"],
-                              help="User mention")
-
-        self.add_arg(id_arg)
-        self.add_arg(user_arg)
-
-        self.add_example("$event invite 123 @ScrubBot")
-
-    async def execute(self, context: CommandContext, args):
-        event = get_event_by_id(args.event)
-        if not event:
-            await context.channel.send(f"Could not find event with ID [{args.event}]")
-            return
-
-        # context mentions should only have the user
-        mentioned_user = context.mentions[0]
-
-        if str(mentioned_user.id) in event.player_list:
-            await context.channel.send(f"{mentioned_user.name} is already attending \"{event.event_name}\".")
-        else:
-            await context.channel.send(f"{mentioned_user.mention}, {context.user.mention} has invited you to "
-                                       f"\"{event.event_name}\". Type `$event join {event.event_id}` to join them!")
-
-
 class EventActiveCommand(Command):
     def __init__(self):
         super(EventActiveCommand, self).__init__("active",

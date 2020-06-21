@@ -34,8 +34,6 @@ class CommandInterface(object):
             return
 
         if group_name not in self.command_groups:
-            embed = await GeneralHelpEmbed(self.command_groups).build_embed()
-            await message.channel.send(f"Command group [{group_name}] does not exist.", embed=embed)
             return
 
         group = self.command_groups[group_name]
