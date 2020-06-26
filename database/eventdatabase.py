@@ -20,8 +20,8 @@ class EventDatabase(object):
     @classmethod
     def add_event(cls, event: Event):
         cur = cls.connection.cursor()
-        sql = ("INSERT INTO events(name, game, hostid, participantids, "
-               "maxparticipants, datetimeutc, userprovidedtime, serverid) "
+        sql = ("INSERT INTO events(event_name, game_name, host_id, player_list, "
+               "max_players, event_datetime, user_provided_datetime, server_id) "
                "VALUES(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id;")
         data = (event.event_name,
                 event.game_name,
@@ -66,8 +66,8 @@ class EventDatabase(object):
     @classmethod
     def update_event(cls, event: Event):
         cur = cls.connection.cursor()
-        sql = ("UPDATE events set (name, game, hostid, participantids, "
-               "maxparticipants, datetimeutc, userprovidedtime, serverid) "
+        sql = ("UPDATE events set (event_name, game_name, host_id, player_list, "
+               "max_players, event_datetime, user_provided_datetime, server_id) "
                "= (%s, %s, %s, %s, %s, %s, %s, %s) where id = %s")
         data = (event.event_name,
                 event.game_name,
@@ -96,8 +96,8 @@ class EventDatabase(object):
     def get_active_events(cls, server_id):
         cur = cls.connection.cursor()
         sql = ("SELECT * FROM events "
-               "WHERE datetimeutc > now() "
-               "AND serverid = %s")
+               "WHERE event_datetime > now() "
+               "AND server_id = %s")
         data = (server_id,)
         cur.execute(sql, data)
         records = cur.fetchall()
