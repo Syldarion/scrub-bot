@@ -134,7 +134,10 @@ class EventActiveEmbed(CustomEmbed):
         self.author_text = f"{self._ref_guild.name} Events"
         self.color = get_random_hue(0.8, 1.0)
 
-        events_joined = "\n\n".join(event.short_text() for event in self._events)
+        if self._events:
+            events_joined = "\n\n".join(event.short_text() for event in self._events)
+        else:
+            events_joined = "None"
 
         self.fields = []
 

@@ -57,8 +57,6 @@ class CommandInterface(object):
 
         try:
             parsed_args = command.parse_args(args)
-
-            print(parsed_args)
             result = await command.execute(context, parsed_args)
         except CommandParseError as e:
             print(e)

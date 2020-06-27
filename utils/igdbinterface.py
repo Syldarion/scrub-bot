@@ -23,7 +23,6 @@ class IgdbInterface(object):
         if found_games == 0:
             return {}
 
-        print(response_json[0])
         return response_json[0]
 
     @classmethod
