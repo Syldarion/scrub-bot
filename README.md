@@ -105,10 +105,16 @@ You will need a Discord bot for this to run on for local work.
 
 First, go to the [Discord Developer Dashboard](https://discord.com/developers/applications). In the top right, select "New Application", and give it a name.
 
+![](https://i.imgur.com/GvO38c9.png)
+
 You should now be looking at the main page for your Discord application. From here, select the "Bot" tab.
 Here, select "Add Bot" to add a Bot user to this application.
 
+![](https://i.imgur.com/o9LSelb.png)
+
 Give your bot a name, and click to reveal your bot's token. Copy this down somewhere because we will need it later.
+
+![](https://i.imgur.com/ceIZil3.png)
 
 Next, we want to invite your bot to the Discord server you will be testing in.
 You need to be the server owner in order to add bots, so create a new test server if necessary.
@@ -127,7 +133,11 @@ In that box, select the following options:
 8. Use External Emojis
 9. Add Reactions
 
-Now, copy the URL in "Scopes", and navigate to it in your browser.
+Your selected boxes should look like this
+
+![](https://i.imgur.com/23rTMJi.png)
+
+Now, copy the URL marked in red, and navigate to it in your browser.
 This should redirect you to a dialogue to invite the bot to servers you own.
 Once the bot is in your server, you're done with the Discord stuff.
 
@@ -135,15 +145,33 @@ Once the bot is in your server, you're done with the Discord stuff.
 After installing and setting up PostgreSQL on your machine, you will need to create the scrubbot database.
 This repo contains a file "scrubbot_db_backup". You should be able to use the pg_restore function with this file to create the necessary schema for the database.
 
-This file assumes you've already created a new database.
+This file assumes you've already created a new database server, and are seeing a similar screen to this in pgAdmin
 
-If using pgAdmin (which should have been installed alongside PostgreSQL), do the following:
-1. Create a new database in your PostgreSQL server. I named mine "scrubbot", but you can name it whatever.
-2. Select the new database in the side panel.
-3. Navigate to Tools > Restore... in the top panel.
-4. In the dialog, leave format as "Custom or tar".
-5. Enter the file path to "scrubbot_db_backup" in the repo. You will probably have to change the "Format" dropdown in the Select file dialog to "All Files".
-6. Click Restore.
+![](https://i.imgur.com/bw3JM4U.png)
+
+As you can see, I have my server with just the default postgres database in it.
+
+From here, right click "Databases", and select Create > Database...
+
+![](https://i.imgur.com/kGUPZNx.png)
+
+In the form that opens, name your database whatever you want (I name mine scrubbot), and click "Save".
+
+![](https://i.imgur.com/uZhuXvb.png)
+
+You should see your new database next to postgres, and can now right click on it and select "Restore..."
+
+![](https://i.imgur.com/WH69Pf4.png)
+
+In the form that opens, set Filename as the path to "scrubbot_db_backup", either directly, or using the file select dialog.
+
+If using the dialog, be sure to change Format to "All Files", and select the correct file in the repo
+
+![](https://i.imgur.com/XkLLDTx.png)
+
+Now, with the file selected, click "Restore" in the Restore dialog.
+
+![](https://i.imgur.com/097jpsF.png)
 
 All required database schema should now be created.
 
