@@ -10,9 +10,6 @@ class EventDatabase(object):
     db_url = os.environ["DATABASE_URL"]
     connection = psycopg2.connect(db_url)
 
-    def __init__(self):
-        pass
-
     @classmethod
     def shutdown(cls):
         cls.connection.close()
