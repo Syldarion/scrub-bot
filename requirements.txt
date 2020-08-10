@@ -1,8 +1,9 @@
 django
 gunicorn
 django-heroku
-discord.py==1.3.4
+discord.py==1.4.1
 requests
 psycopg2-binary
 dj-database-url
 dateparser
+d20==1.0.4

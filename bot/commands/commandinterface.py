@@ -6,10 +6,12 @@ from bot.embeds.commandembed import CommandEmbed, CommandExampleEmbed
 from bot.embeds.commandgroupembed import CommandGroupEmbed
 from bot.embeds.generalhelpembed import GeneralHelpEmbed
 from .eventcommands import event_command_group
+from .standalonecommands import standalone_command_group
 
 
 class CommandInterface(object):
     def __init__(self):
+        self.standalone_commands = standalone_command_group
         self.command_groups = {
             event_command_group.name: event_command_group,
         }
@@ -26,7 +28,6 @@ class CommandInterface(object):
 
         part_count = len(command_parts)
         group_name = command_parts[0]
-        command_name = command_parts[1] if part_count > 1 else None
 
         if group_name == "help":
             embed = await GeneralHelpEmbed(self.command_groups).build_embed()
@@ -34,11 +35,15 @@ class CommandInterface(object):
             return
 
         if group_name not in self.command_groups:
-            return
+            group = self.standalone_commands
+            command_name = command_parts[0]
+            command_args = command_parts[1:]
+        else:
+            group = self.command_groups[group_name]
+            command_name = command_parts[1] if part_count > 1 else None
+            command_args = command_parts[2:]
 
-        group = self.command_groups[group_name]
-
-        if not command_name or command_name == "-help":
+        if not command_args or command_args[0] == "-help":
             embed = await CommandGroupEmbed(group).build_embed()
             await message.channel.send(embed=embed)
             return
@@ -50,7 +55,7 @@ class CommandInterface(object):
 
         command = group.get_command(command_name)
 
-        await self.execute_command(command, context, command_parts[2:])
+        await self.execute_command(command, context, command_args)
 
     async def execute_command(self, command, context, args):
         result = False
