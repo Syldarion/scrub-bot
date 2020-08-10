@@ -34,6 +34,8 @@ class IgdbInterface(object):
         headers = {
             "user-key": cls.key
         }
+        if "cover" not in game_info:
+            return ""
         cover_id = game_info["cover"]
         payload = f"fields id, game, url; where id = {cover_id};"
 
