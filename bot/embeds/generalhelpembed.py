@@ -9,26 +9,34 @@ class GeneralHelpEmbed(CustomEmbed):
         self._reference_groups = command_groups
 
     async def build_embed(self):
-        self.author_text = "ScrubBot Helper"
-        self.title = "ScrubBot General Help"
+        self.author_text = "ScrubBot"
+        self.title = "ScrubBot Help"
         self.description = "ScrubBot is a general-purpose bot designed for the ScrubLords Discord server"
         self.color = discord_color_hsv(0.16, 1.0, 0.9)
 
         self.fields = []
 
-        groups_field_value = CustomEmbedField(
-            name="Command Groups",
-            value="\n".join([group for group in self._reference_groups])
+        # groups_field_value = CustomEmbedField(
+        #     name="Command Groups",
+        #     value="\n".join([group for group in self._reference_groups])
+        # )
+        #
+        # self.fields.append(groups_field_value)
+        #
+        # for name, group in self._reference_groups.items():
+        #     examples_joined = "\n\n".join(group.random_examples)
+        #     examples_field = CustomEmbedField(
+        #         name=f"Random ${group.name} Examples",
+        #         value=f"```\n{examples_joined}\n```"
+        #     )
+        #     self.fields.append(examples_field)
+
+        help_link_field = CustomEmbedField(
+            name="ScrubBot Documentation",
+            value="See https://github.com/Syldarion/scrub-bot/blob/main/README.md for documentation until I make"
+                  "a proper help system"
         )
 
-        self.fields.append(groups_field_value)
-
-        for name, group in self._reference_groups.items():
-            examples_joined = "\n\n".join(group.random_examples)
-            examples_field = CustomEmbedField(
-                name=f"Random ${group.name} Examples",
-                value=f"```\n{examples_joined}\n```"
-            )
-            self.fields.append(examples_field)
+        self.fields.append(help_link_field)
 
         return await super(GeneralHelpEmbed, self).build_embed()

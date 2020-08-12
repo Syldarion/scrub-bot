@@ -23,7 +23,6 @@ class CommandInterface(object):
         command_parts = message.content[1:].split()
 
         if not command_parts:
-            # There was nothing there
             return
 
         part_count = len(command_parts)
@@ -43,14 +42,7 @@ class CommandInterface(object):
             command_name = command_parts[1] if part_count > 1 else None
             command_args = command_parts[2:]
 
-        if not command_args or command_args[0] == "-help":
-            embed = await CommandGroupEmbed(group).build_embed()
-            await message.channel.send(embed=embed)
-            return
-
-        if command_name not in group.commands:
-            embed = await CommandGroupEmbed(group).build_embed()
-            await message.channel.send(self.invalid_sub_command_message(command_name), embed=embed)
+        if not command_args or command_args[0] == "-help" or command_name not in group.commands:
             return
 
         command = group.get_command(command_name)
