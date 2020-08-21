@@ -1,27 +1,26 @@
 import random
+import discord
 from .command import Command
+from .commandhandler import CommandHandler
 
 
-class CommandGroup(object):
+class CommandGroup(CommandHandler):
     def __init__(self, name, description_text=""):
-        self.name = name
+        super(CommandGroup, self).__init__(name)
+
         self.description_text = description_text
-        self.commands = {}
+        self.command_handlers = {}
 
-    @property
-    def random_examples(self):
-        examples = []
-        for name, command in self.commands.items():
-            example_count = len(command.examples)
-            if example_count == 0:
-                continue
-            rand_index = random.randint(0, example_count - 1)
-            examples.append(command.examples[rand_index])
-        return examples
-
-    def add_command(self, command: Command):
-        self.commands[command.name] = command
+    def add_command(self, command: CommandHandler):
+        self.command_handlers[command.name] = command
         command.group = self
 
-    def get_command(self, command_name) -> Command:
-        return self.commands[command_name]
+    def get_command(self, command_name) -> CommandHandler:
+        return self.command_handlers[command_name]
+
+    async def handle_command(self, command_parts, message: discord.Message):
+        # Before coming in here, we should have stripped out the leading group name
+        sub_handler_name = command_parts[0]
+        if sub_handler_name in self.command_handlers:
+            # Strip the leading name
+            await self.command_handlers[sub_handler_name].handle_command(command_parts[1:], message)

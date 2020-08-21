@@ -1,5 +1,6 @@
 import argparse
-from .commandcontext import CommandContext
+import discord
+from .commandhandler import CommandHandler
 
 
 class CommandExecuteError(Exception):
@@ -50,10 +51,11 @@ class CommandArg(object):
         return None
 
 
-class Command(object):
+class Command(CommandHandler):
     def __init__(self, name, description_text="", help_title=""):
+        super(Command, self).__init__(name)
+
         self.group = None
-        self.name = name
         self.description_text = description_text
         self.help_title = help_title
         self._args = []
@@ -83,5 +85,15 @@ class Command(object):
 
         return parsed
 
-    async def execute(self, context: CommandContext, args):
+    async def handle_command(self, command_parts, message: discord.Message):
+        # Before coming in here, we should have stripped out the name, should only be args left
+        try:
+            parsed_args = self.parse_args(command_parts)
+            await self.execute(message, args=parsed_args)
+        except CommandParseError as pe:
+            await message.channel.send(f"Command Parse Error: {pe}")
+        except Exception as e:
+            print(e)
+
+    async def execute(self, message: discord.Message, args):
         pass

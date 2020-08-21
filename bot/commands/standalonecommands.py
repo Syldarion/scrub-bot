@@ -1,11 +1,8 @@
 import d20
+import discord
 
 from .command import Command, CommandArg, JoinStringAction, CommandExecuteError
 from .commandgroup import CommandGroup
-from .commandcontext import CommandContext
-
-
-standalone_command_group = CommandGroup("standalone")
 
 
 class RollCommand(Command):
@@ -29,7 +26,7 @@ class RollCommand(Command):
         self.add_example("$roll 2d4")
         self.add_example("$roll 1d6+2")
 
-    async def execute(self, context: CommandContext, args):
+    async def execute(self, message: discord.Message, args):
         results = []
 
         for _ in range(args.count):
@@ -37,7 +34,7 @@ class RollCommand(Command):
 
         roll_str = "\n".join(results)
 
-        await context.channel.send(roll_str)
+        await message.channel.send(roll_str)
 
     def parse_and_roll(self, roll_str):
         try:
@@ -45,6 +42,3 @@ class RollCommand(Command):
             return str(result)
         except d20.RollSyntaxError:
             return f"{roll_str}: Roll Syntax Error"
-
-
-standalone_command_group.add_command(RollCommand())
