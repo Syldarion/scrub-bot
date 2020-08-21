@@ -1,5 +1,6 @@
 import discord
 from .eventcommands import event_command_group
+from .serverconfigcommands import config_command_group
 from .standalonecommands import RollCommand
 
 
@@ -10,6 +11,7 @@ class CommandInterface(object):
         self.command_handlers = {
             roll_command.name: roll_command,
             event_command_group.name: event_command_group,
+            config_command_group.name: config_command_group
         }
 
     async def handle_command_message(self, message: discord.Message) -> bool:

@@ -3,6 +3,8 @@ import psycopg2
 import dateparser
 
 from .eventproxy import EventProxy, COLUMN_EVENT_DATETIME, COLUMN_SERVER_ID
+from .eventmessageproxy import EventMessageProxy
+from .serverconfigproxy import ServerConfigProxy
 from events.event import Event
 
 
@@ -22,6 +24,16 @@ class EventDatabase(object):
         cur.execute(sql, data)
 
         event.event_id = cur.fetchone()[0]
+
+        cls.connection.commit()
+        cur.close()
+
+    @classmethod
+    def add_event_message_binding(cls, event: Event, message_id):
+        cur = cls.connection.cursor()
+        sql, data = EventMessageProxy.add_event_message_statement(event.event_id, event.server_id, message_id)
+
+        cur.execute(sql, data)
 
         cls.connection.commit()
         cur.close()
@@ -77,3 +89,49 @@ class EventDatabase(object):
         cur.close()
 
         return events
+
+    @classmethod
+    def get_event_id_by_message_id(cls, server_id, message_id):
+        cur = cls.connection.cursor()
+        sql, data = EventMessageProxy.get_event_id_statement(server_id, message_id)
+
+        cur.execute(sql, data)
+        first_record = cur.fetchone()
+        cur.close()
+
+        if not first_record:
+            return None
+
+        return first_record[0]
+
+    @classmethod
+    def get_server_config(cls, server_id):
+        cur = cls.connection.cursor()
+        sql, data = ServerConfigProxy.get_server_config_statement(server_id)
+
+        cur.execute(sql, data)
+        first_record = cur.fetchone()
+        cur.close()
+
+        if not first_record:
+            return None
+
+        return ServerConfigProxy.create_server_config_from_record(first_record)
+
+    @classmethod
+    def add_server_config(cls, server_config):
+        cur = cls.connection.cursor()
+        sql, data = ServerConfigProxy.create_server_config_statement(server_config)
+
+        cur.execute(sql, data)
+        cls.connection.commit()
+        cur.close()
+
+    @classmethod
+    def update_server_config(cls, server_config):
+        cur = cls.connection.cursor()
+        sql, data = ServerConfigProxy.update_server_config_statement(server_config)
+
+        cur.execute(sql, data)
+        cls.connection.commit()
+        cur.close()

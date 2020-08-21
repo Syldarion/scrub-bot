@@ -20,6 +20,21 @@ def get_event_by_id(event_id):
     return event
 
 
+def get_output_channel(message: discord.Message):
+    output_channel = None
+    server_id = message.guild.id
+    server_config = EventDatabase.get_server_config(server_id)
+    if server_config:
+        for channel in message.guild.channels:
+            if str(channel.id) == str(server_config.event_channel_id):
+                output_channel = channel
+
+    if not output_channel:
+        output_channel = message.channel
+
+    return output_channel
+
+
 class EventCreateCommand(Command):
     def __init__(self):
         super(EventCreateCommand, self).__init__("create",
@@ -90,8 +105,9 @@ class EventCreateCommand(Command):
 
         EventDatabase.add_event(new_event)
 
+        output_channel = get_output_channel(message)
         event_embed = await EventEmbed(new_event).build_embed()
-        message = await message.channel.send(embed=event_embed)
+        message = await output_channel.send(embed=event_embed)
 
         EventDatabase.add_event_message_binding(new_event, message.id)
 
@@ -173,8 +189,9 @@ class EventEditCommand(Command):
 
         EventDatabase.update_event(event)
 
+        output_channel = get_output_channel(message)
         event_embed = await EventEmbed(event).build_embed()
-        await message.channel.send(embed=event_embed)
+        await output_channel.send(embed=event_embed)
 
 
 class EventJoinCommand(Command):
