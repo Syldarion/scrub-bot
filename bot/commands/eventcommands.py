@@ -188,6 +188,39 @@ class EventCancelCommand(Command):
         await EventInterface.cancel_event(event)
 
 
+class EventKickCommand(Command):
+    def __init__(self):
+        super(EventKickCommand, self).__init__("kick",
+                                               description_text="Kick a user from your event",
+                                               help_title="$event kick [event id] @[user]")
+
+        id_arg = CommandArg(names=["event"],
+                            help="Event ID",
+                            type=int)
+        user_arg = CommandArg(names=["user"],
+                              help="User mention",
+                              nargs="+")
+
+        self.add_arg(id_arg)
+        self.add_arg(user_arg)
+
+        self.add_example("$event kick 123 @Syldarion")
+
+    async def execute(self, message: discord.Message, args):
+        event = EventInterface.get_event_by_id(args.event)
+        if not event:
+            return
+
+        caller_id = str(message.author.id)
+        if caller_id != event.host_id:
+            return
+
+        for user in message.mentions:
+            if user.id != event.host_id:
+                await EventInterface.remove_player_from_event(event, user.id)
+
+
 event_command_group.add_command(EventCreateCommand())
 event_command_group.add_command(EventEditCommand())
 event_command_group.add_command(EventCancelCommand())
+event_command_group.add_command(EventKickCommand())
