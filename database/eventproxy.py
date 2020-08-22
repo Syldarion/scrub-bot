@@ -10,6 +10,8 @@ COLUMN_EVENT_DATETIME = "event_datetime"
 COLUMN_USER_DATETIME = "user_provided_datetime"
 COLUMN_MAX_PLAYERS = "max_players"
 COLUMN_SERVER_ID = "server_id"
+COLUMN_WAITLIST_ENABLED = "waitlist_enabled"
+COLUMN_WAITLIST = "waitlist"
 
 
 class EventProxy(object):
@@ -24,7 +26,9 @@ class EventProxy(object):
         COLUMN_EVENT_DATETIME,
         COLUMN_USER_DATETIME,
         COLUMN_MAX_PLAYERS,
-        COLUMN_SERVER_ID
+        COLUMN_SERVER_ID,
+        COLUMN_WAITLIST_ENABLED,
+        COLUMN_WAITLIST
     ]
 
     db_mapping = [
@@ -36,7 +40,9 @@ class EventProxy(object):
         COLUMN_EVENT_DATETIME,
         COLUMN_USER_DATETIME,
         COLUMN_MAX_PLAYERS,
-        COLUMN_SERVER_ID
+        COLUMN_SERVER_ID,
+        COLUMN_WAITLIST_ENABLED,
+        COLUMN_WAITLIST
     ]
 
     @staticmethod

@@ -19,23 +19,12 @@ class EventEmbed(CustomEmbed):
         # Maybe I should just pass the client handle around
         from bot.discordclient import DiscordClient
 
-        host_user = DiscordClient.instance.get_user(int(self.ref_event.host_id))
-        if not host_user:
-            host_name = "Unknown Gamer"
-            host_avatar_url = ""
-        else:
-            host_name = host_user.name
-            host_avatar_url = host_user.avatar_url
+        host_name = DiscordClient.instance.get_username_by_id(self.ref_event.host_id)
 
         player_names = []
         for player_id in self.ref_event.player_list:
-            player_user = DiscordClient.instance.get_user(int(player_id))
-            if not player_user:
-                player_names.append("Unknown Gamer")
-            else:
-                player_names.append(player_user.name)
+            player_names.append(DiscordClient.instance.get_username_by_id(player_id))
 
-        self.author_icon_url = host_avatar_url
         self.author_text = f"{self.ref_event.game_name} - Hosted by {host_name}"
         self.title = self.ref_event.event_name
         self.color = get_random_hue(0.8, 1.0)
@@ -72,6 +61,23 @@ class EventEmbed(CustomEmbed):
             name=player_field_title,
             value="\n".join(player_names or ["EMPTY"])
         ))
+
+        if self.ref_event.waitlist_enabled and len(self.ref_event.waitlist) > 0:
+            waitlist_names = []
+
+            for waitlist_id in self.ref_event.waitlist[:3]:
+                waitlist_names.append(DiscordClient.instance.get_username_by_id(waitlist_id))
+
+            waitlist_value = "\n".join(waitlist_names)
+            waitlist_count = len(self.ref_event.waitlist)
+
+            if waitlist_count > 3:
+                waitlist_value += f"\nAnd {waitlist_count - 3} more..."
+
+            self.fields.append(CustomEmbedField(
+                name="Waitlist",
+                value=waitlist_value
+            ))
 
         if self.ref_event.user_provided_datetime:
             self.fields.append(CustomEmbedField(

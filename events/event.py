@@ -9,6 +9,8 @@ class Event(object):
         self.user_provided_datetime = ""
         self.max_players = 0
         self.server_id = "0"
+        self.waitlist_enabled = False
+        self.waitlist = []
 
     def __str__(self):
         return (f"Game: {self.game_name}\n"

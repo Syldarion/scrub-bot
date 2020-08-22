@@ -1,3 +1,4 @@
+import os
 import datetime
 import dateparser
 import discord
@@ -36,15 +37,20 @@ class EventCreateCommand(Command):
                               nargs="*",
                               help="Event time",
                               action=JoinStringAction)
+        waitlist_arg = CommandArg(names=["--waitlist"],
+                                  dest="waitlist",
+                                  help="Enable event waitlist",
+                                  action="store_true")
 
         self.add_arg(name_arg)
         self.add_arg(game_arg)
         self.add_arg(max_arg)
         self.add_arg(time_arg)
+        self.add_arg(waitlist_arg)
 
         self.add_example("$event create -game Borderlands -name BL Game Night -max 4 -time July 4th, 2020 6:00 PM PDT")
         self.add_example("$event create -g Tabletop Simulator -name Board Game Night -m 8 -time 06/12/20 18:00 PT")
-        self.add_example("$event create -g Castle Crashers -n What Year Is It -time in 1 hour")
+        self.add_example("$event create -g Castle Crashers -n What Year Is It -time in 1 hour --waitlist")
 
     async def execute(self, message: discord.Message, args):
         new_event = Event()
@@ -75,6 +81,9 @@ class EventCreateCommand(Command):
             else:
                 new_event.event_datetime = parsed_dt
                 new_event.user_provided_datetime = args.time
+
+        if args.waitlist:
+            new_event.waitlist_enabled = True
 
         new_event.host_id = message.author.id
         new_event.server_id = str(message.guild.id)
@@ -220,7 +229,41 @@ class EventKickCommand(Command):
                 await EventInterface.remove_player_from_event(event, user.id)
 
 
+class EventForceAddCommand(Command):
+    def __init__(self):
+        super(EventForceAddCommand, self).__init__("forceadd",
+                                                   description_text="Force add user. DEBUG ONLY",
+                                                   help_title="$event forceadd [event id] @[user]")
+
+        id_arg = CommandArg(names=["event"],
+                            help="Event ID",
+                            type=int)
+        user_arg = CommandArg(names=["user"],
+                              help="User mention",
+                              nargs="+")
+
+        self.add_arg(id_arg)
+        self.add_arg(user_arg)
+
+        self.add_example("$event forceadd 123 @Syldarion")
+
+    async def execute(self, message: discord.Message, args):
+        event = EventInterface.get_event_by_id(args.event)
+        if not event:
+            return
+
+        caller_id = str(message.author.id)
+        if caller_id != event.host_id:
+            return
+
+        for user in message.mentions:
+            await EventInterface.force_add_player_to_event(event, user.id)
+
+
 event_command_group.add_command(EventCreateCommand())
 event_command_group.add_command(EventEditCommand())
 event_command_group.add_command(EventCancelCommand())
 event_command_group.add_command(EventKickCommand())
+
+if os.environ["DEBUG_ENV"]:
+    event_command_group.add_command(EventForceAddCommand())

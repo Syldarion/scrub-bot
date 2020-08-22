@@ -41,3 +41,10 @@ class DiscordClient(discord.Client):
             return
 
         await self.reaction_interface.handle_reaction_remove(reaction_payload)
+
+    def get_username_by_id(self, user_id):
+        user = self.get_user(int(user_id))
+        if not user:
+            return "Unknown User"
+        else:
+            return user.name

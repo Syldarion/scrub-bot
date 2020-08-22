@@ -82,9 +82,11 @@ class EventInterface(object):
             return
 
         if event.max_players > 0 and len(event.player_list) >= event.max_players:
-            return
+            if event.waitlist_enabled:
+                event.waitlist.append(player_id)
+        else:
+            event.player_list.append(player_id)
 
-        event.player_list.append(player_id)
         await EventInterface.update_event(event)
 
     @classmethod
@@ -93,4 +95,23 @@ class EventInterface(object):
 
         if player_id in event.player_list:
             event.player_list.remove(player_id)
+            if event.waitlist_enabled and len(event.waitlist) > 0:
+                event.player_list.append(event.waitlist.pop(0))
+
+        if event.waitlist_enabled and player_id in event.waitlist:
+            event.waitlist.remove(player_id)
+
+        await EventInterface.update_event(event)
+
+    @classmethod
+    async def force_add_player_to_event(cls, event: Event, player_id):
+        # Please don't use this except in debug scenarios
+        player_id = str(player_id)
+
+        if event.max_players > 0 and len(event.player_list) >= event.max_players:
+            if event.waitlist_enabled:
+                event.waitlist.append(player_id)
+        else:
+            event.player_list.append(player_id)
+
         await EventInterface.update_event(event)
