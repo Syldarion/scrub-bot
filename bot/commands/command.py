@@ -52,12 +52,13 @@ class CommandArg(object):
 
 
 class Command(CommandHandler):
-    def __init__(self, name, description_text="", help_title=""):
+    def __init__(self, name, description_text="", help_title="", admin=False):
         super(Command, self).__init__(name)
 
         self.group = None
         self.description_text = description_text
         self.help_title = help_title
+        self.admin_only = admin
         self._args = []
         self._examples = []
 
@@ -85,9 +86,16 @@ class Command(CommandHandler):
 
         return parsed
 
+    def user_can_use_command(self, author: discord.Member):
+        if not self.admin_only:
+            return True
+        return author.guild_permissions.administrator
+
     async def handle_command(self, command_parts, message: discord.Message):
         # Before coming in here, we should have stripped out the name, should only be args left
         try:
+            if not self.user_can_use_command(message.author):
+                return
             parsed_args = self.parse_args(command_parts)
             await self.execute(message, args=parsed_args)
         except CommandParseError as pe:

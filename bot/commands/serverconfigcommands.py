@@ -14,7 +14,8 @@ class ServerConfigChannelCommand(Command):
     def __init__(self):
         super(ServerConfigChannelCommand, self).__init__("channel",
                                                          description_text="Set channel for events",
-                                                         help_title="$config channel #[channel]")
+                                                         help_title="$config channel #[channel]",
+                                                         admin=True)
 
         channel_arg = CommandArg(names=["channel"],
                                  nargs="+",
