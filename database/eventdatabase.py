@@ -105,6 +105,20 @@ class EventDatabase(object):
         return first_record[0]
 
     @classmethod
+    def get_message_id_by_event_id(cls, event_id):
+        cur = cls.connection.cursor()
+        sql, data = EventMessageProxy.get_message_id_statement(event_id)
+
+        cur.execute(sql, data)
+        first_record = cur.fetchone()
+        cur.close()
+
+        if not first_record:
+            return None
+
+        return first_record[0]
+
+    @classmethod
     def get_server_config(cls, server_id):
         cur = cls.connection.cursor()
         sql, data = ServerConfigProxy.get_server_config_statement(server_id)

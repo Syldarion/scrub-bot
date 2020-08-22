@@ -9,30 +9,10 @@ from events.event import Event
 from database.eventdatabase import EventDatabase
 from bot.embeds.eventembed import EventEmbed, EventPlayersEmbed, EventActiveEmbed
 
+from events.eventinterface import EventInterface
+
 
 event_command_group = CommandGroup("event")
-
-
-def get_event_by_id(event_id):
-    if event_id is None:
-        raise CommandExecuteError("Event ID was not provided")
-    event = EventDatabase.get_event(event_id)
-    return event
-
-
-def get_output_channel(message: discord.Message):
-    output_channel = None
-    server_id = message.guild.id
-    server_config = EventDatabase.get_server_config(server_id)
-    if server_config:
-        for channel in message.guild.channels:
-            if str(channel.id) == str(server_config.event_channel_id):
-                output_channel = channel
-
-    if not output_channel:
-        output_channel = message.channel
-
-    return output_channel
 
 
 class EventCreateCommand(Command):
@@ -89,10 +69,10 @@ class EventCreateCommand(Command):
             parsed_dt = dateparser.parse(args.time)
 
             if not parsed_dt:
-                message = (f"Could not parse time input \"{args.time}\"\n"
-                           f"Event will be created, but will not have alerts"
-                           f"You can update the time with `$event update -t <time>`")
-                await message.channel.send(message)
+                message_text = (f"Could not parse time input \"{args.time}\"\n"
+                                f"Event will be created, but will not have alerts"
+                                f"You can update the time with `$event update -t <time>`")
+                await message.channel.send(message_text)
             elif parsed_dt < datetime.datetime.now(parsed_dt.tzinfo):
                 await message.channel.send(f"Time \"{args.time}\" is in the past, and will not be used.")
             else:
@@ -103,13 +83,7 @@ class EventCreateCommand(Command):
         new_event.player_list = [message.author.id]
         new_event.server_id = str(message.guild.id)
 
-        EventDatabase.add_event(new_event)
-
-        output_channel = get_output_channel(message)
-        event_embed = await EventEmbed(new_event).build_embed()
-        message = await output_channel.send(embed=event_embed)
-
-        EventDatabase.add_event_message_binding(new_event, message.id)
+        await EventInterface.create_event(new_event)
 
 
 class EventEditCommand(Command):
@@ -152,7 +126,7 @@ class EventEditCommand(Command):
         self.add_example("$event edit 123 -t in 2 hours")
 
     async def execute(self, message: discord.Message, args):
-        event = get_event_by_id(args.event)
+        event = EventInterface.get_event_by_id(args.event)
         if not event:
             await message.channel.send(f"Could not find event with ID [{args.event}]")
             return
@@ -178,8 +152,8 @@ class EventEditCommand(Command):
             parsed_dt = dateparser.parse(args.time)
 
             if not parsed_dt:
-                message = (f"Could not parse time input \"{args.time}\"\n")
-                await message.channel.send(message)
+                message_text = f"Could not parse time input \"{args.time}\"\n"
+                await message.channel.send(message_text)
                 event.event_datetime = None
             elif parsed_dt < datetime.datetime.now(parsed_dt.tzinfo):
                 await message.channel.send(f"Time \"{args.time}\" is in the past, and will not be used.")
@@ -187,11 +161,7 @@ class EventEditCommand(Command):
                 event.event_datetime = parsed_dt
                 event.user_provided_datetime = args.time
 
-        EventDatabase.update_event(event)
-
-        output_channel = get_output_channel(message)
-        event_embed = await EventEmbed(event).build_embed()
-        await output_channel.send(embed=event_embed)
+        await EventInterface.update_event(event)
 
 
 class EventJoinCommand(Command):
@@ -209,7 +179,7 @@ class EventJoinCommand(Command):
         self.add_example("$event join 123")
 
     async def execute(self, message: discord.Message, args):
-        event = get_event_by_id(args.event)
+        event = EventInterface.get_event_by_id(args.event)
         if not event:
             await message.channel.send(f"Could not find event with ID [{args.event}]")
             return
@@ -228,11 +198,7 @@ class EventJoinCommand(Command):
             await message.channel.send(f"{message.author.mention}, this event is full!")
             return
 
-        event.player_list.append(joiner_id)
-
-        EventDatabase.update_event(event)
-
-        await message.channel.send(f"{message.author.mention}, you've joined \"{event.event_name}\"!")
+        await EventInterface.add_player_to_event(event, joiner_id)
 
 
 class EventLeaveCommand(Command):
@@ -250,7 +216,7 @@ class EventLeaveCommand(Command):
         self.add_example("$event leave 123")
 
     async def execute(self, message: discord.Message, args):
-        event = get_event_by_id(args.event)
+        event = EventInterface.get_event_by_id(args.event)
         if not event:
             await message.channel.send(f"Could not find event with ID [{args.event}]")
             return
@@ -278,11 +244,7 @@ class EventLeaveCommand(Command):
             await message.channel.send(f"{message.author.mention}, you are not in this event!")
             return
 
-        event.player_list.remove(caller_id)
-
-        EventDatabase.update_event(event)
-
-        await message.channel.send(f"{message.author.mention}, you have left \"{event.event_name}\".")
+        await EventInterface.remove_player_from_event(event, caller_id)
 
 
 class EventCancelCommand(Command):
@@ -300,7 +262,7 @@ class EventCancelCommand(Command):
         self.add_example("$event cancel 123")
 
     async def execute(self, message: discord.Message, args):
-        event = get_event_by_id(args.event)
+        event = EventInterface.get_event_by_id(args.event)
         if not event:
             await message.channel.send(f"Could not find event with ID [{args.event}]")
             return
@@ -310,11 +272,7 @@ class EventCancelCommand(Command):
             await message.channel.send(f"{message.author.mention}, only the host can cancel the event!")
             return
 
-        EventDatabase.delete_event(args.event)
-
-        cancel_mentions = ", ".join(f"<@{player_id}>" for player_id in event.player_list)
-
-        await message.channel.send(f"{cancel_mentions} - The event \"{event.event_name}\" has been cancelled.")
+        await EventInterface.cancel_event(event)
 
 
 event_command_group.add_command(EventCreateCommand())
