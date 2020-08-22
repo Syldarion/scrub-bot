@@ -6,9 +6,6 @@ from .command import Command, CommandArg, JoinStringAction, CommandExecuteError
 from .commandgroup import CommandGroup
 
 from events.event import Event
-from database.eventdatabase import EventDatabase
-from bot.embeds.eventembed import EventEmbed, EventPlayersEmbed, EventActiveEmbed
-
 from events.eventinterface import EventInterface
 
 
@@ -80,7 +77,6 @@ class EventCreateCommand(Command):
                 new_event.user_provided_datetime = args.time
 
         new_event.host_id = message.author.id
-        new_event.player_list = [message.author.id]
         new_event.server_id = str(message.guild.id)
 
         await EventInterface.create_event(new_event)
@@ -164,89 +160,6 @@ class EventEditCommand(Command):
         await EventInterface.update_event(event)
 
 
-class EventJoinCommand(Command):
-    def __init__(self):
-        super(EventJoinCommand, self).__init__("join",
-                                               description_text="Join an event",
-                                               help_title="$event join [event id]")
-
-        id_arg = CommandArg(names=["event"],
-                            help="Event ID",
-                            type=int)
-
-        self.add_arg(id_arg)
-
-        self.add_example("$event join 123")
-
-    async def execute(self, message: discord.Message, args):
-        event = EventInterface.get_event_by_id(args.event)
-        if not event:
-            await message.channel.send(f"Could not find event with ID [{args.event}]")
-            return
-
-        joiner_id = str(message.author.id)
-
-        if joiner_id == event.host_id:
-            await message.channel.send(f"{message.author.mention}, you are the host of this event!")
-            return
-
-        if joiner_id in event.player_list:
-            await message.channel.send(f"{message.author.mention}, you are already in this event!")
-            return
-
-        if event.max_players and 0 < event.max_players <= len(event.player_list):
-            await message.channel.send(f"{message.author.mention}, this event is full!")
-            return
-
-        await EventInterface.add_player_to_event(event, joiner_id)
-
-
-class EventLeaveCommand(Command):
-    def __init__(self):
-        super(EventLeaveCommand, self).__init__("leave",
-                                                description_text="Leave an event you are in",
-                                                help_title="$event leave [event id]")
-
-        id_arg = CommandArg(names=["event"],
-                            help="Event ID",
-                            type=int)
-
-        self.add_arg(id_arg)
-
-        self.add_example("$event leave 123")
-
-    async def execute(self, message: discord.Message, args):
-        event = EventInterface.get_event_by_id(args.event)
-        if not event:
-            await message.channel.send(f"Could not find event with ID [{args.event}]")
-            return
-
-        caller_id = str(message.author.id)
-
-        # The event host is leaving
-        if caller_id == event.host_id:
-            event.host_id = None
-            event.player_list.remove(caller_id)
-
-            # No players left in event
-            if not event.player_list:
-                await message.channel.send(f"No players left in \"{event.event_name}\"; the event is cancelled.")
-                EventDatabase.delete_event(event.event_id)
-                return
-
-            # Assign a new host
-            event.host_id = event.player_list[0]
-
-            await message.channel.send(f"<@{event.host_id}>, you are the new host of \"{event.event_name}\"!")
-            return
-
-        if caller_id not in event.player_list:
-            await message.channel.send(f"{message.author.mention}, you are not in this event!")
-            return
-
-        await EventInterface.remove_player_from_event(event, caller_id)
-
-
 class EventCancelCommand(Command):
     def __init__(self):
         super(EventCancelCommand, self).__init__("cancel",
@@ -277,6 +190,4 @@ class EventCancelCommand(Command):
 
 event_command_group.add_command(EventCreateCommand())
 event_command_group.add_command(EventEditCommand())
-event_command_group.add_command(EventJoinCommand())
-event_command_group.add_command(EventLeaveCommand())
 event_command_group.add_command(EventCancelCommand())

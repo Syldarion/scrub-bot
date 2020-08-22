@@ -5,21 +5,6 @@ from events.event import Event
 from database.eventdatabase import EventDatabase
 
 
-def get_output_channel(message: discord.Message):
-    output_channel = None
-    server_id = message.guild.id
-    server_config = EventDatabase.get_server_config(server_id)
-    if server_config:
-        for channel in message.guild.channels:
-            if str(channel.id) == str(server_config.event_channel_id):
-                output_channel = channel
-
-    if not output_channel:
-        output_channel = message.channel
-
-    return output_channel
-
-
 def get_output_channel(server_id):
     from bot.discordclient import DiscordClient
     output_channel = None
@@ -37,6 +22,9 @@ def get_output_channel(server_id):
 
 
 class EventInterface(object):
+    JOIN_EMOJI_UNICODE = "\u2705"
+    REMINDER_EMOJI_UNICODE = "\u1f514"
+
     def __init__(self):
         pass
 
@@ -54,6 +42,8 @@ class EventInterface(object):
         output_channel = get_output_channel(event.server_id)
         event_embed = await EventEmbed(event).build_embed()
         embed_message = await output_channel.send(embed=event_embed)
+
+        await embed_message.add_reaction(EventInterface.JOIN_EMOJI_UNICODE)
 
         EventDatabase.add_event_message_binding(event, embed_message.id)
 
@@ -86,14 +76,20 @@ class EventInterface(object):
 
     @classmethod
     async def add_player_to_event(cls, event: Event, player_id):
-        # add player to event, then update the event
+        player_id = str(player_id)
+
+        if player_id in event.player_list:
+            return
+
+        if event.max_players > 0 and len(event.player_list) >= event.max_players:
+            return
 
         event.player_list.append(player_id)
         await EventInterface.update_event(event)
 
     @classmethod
     async def remove_player_from_event(cls, event: Event, player_id):
-        # remove player from event, then update the event
+        player_id = str(player_id)
 
         if player_id in event.player_list:
             event.player_list.remove(player_id)
